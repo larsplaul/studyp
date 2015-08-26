@@ -40,7 +40,7 @@ app.controller('StudentStudyPointCtrl', ['$scope', '$http','$routeParams','$filt
 
 
   $scope.getClass = function (id) {
-    var url = "userApi/class/"+id ;
+    var url = "api/user/myStudyPoints/"+id ;
     $http.get(url)
       .success(function (data, status, headers, config) {
         $scope.allPeriods = data.periods;
@@ -62,7 +62,7 @@ app.controller('StudentStudyPointCtrl', ['$scope', '$http','$routeParams','$filt
       })
   }
 
-  var urlForStudentsClasses = "userApi/myClasses";
+  var urlForStudentsClasses = "api/user/myClasses";
   $http.get(urlForStudentsClasses)
     .success(function(data,status,headers,config){
       $scope.classes = data;

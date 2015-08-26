@@ -14,14 +14,16 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.Table;
 
 
 @Entity
+@Table(name="SEMESTER_PERIOD")
 public class SemesterPeriod implements Serializable {
   private static final long serialVersionUID = 1L;
   @Id
-  @GeneratedValue(strategy = GenerationType.TABLE,generator = "idGenerator")
-  //@GeneratedValue(strategy = GenerationType.TABLE)
+  //@GeneratedValue(strategy = GenerationType.TABLE,generator = "idGenerator")
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Integer id;
   
   @ManyToOne

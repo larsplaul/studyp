@@ -13,13 +13,16 @@ import java.lang.annotation.Annotation;
 import java.security.Principal;
 import java.text.ParseException;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import javax.annotation.Priority;
 import javax.annotation.security.DenyAll;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
+import javax.naming.AuthenticationException;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
+import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -40,23 +43,26 @@ public class JWTAuthenticationFilter implements ContainerRequestFilter {
 
   @Override
   public void filter(ContainerRequestContext request) throws IOException {
-
+    
     if (isSecuredResource()) {
-
-        //String token = request.getHeaderString("x-access-token"); 
+      //String token = request.getHeaderString("x-access-token"); 
       String authorizationHeader = request.getHeaderString("Authorization");
-      if(authorizationHeader == null){
-        makeErrorResponse(request, "No authorization header provided");
-        return;
+      if (authorizationHeader == null) {
+        //makeErrorResponse(request, "No authorization header provided");
+        throw new NotAuthorizedException("No authorization header provided",Response.Status.UNAUTHORIZED);
+        //return;
       }
       String token = request.getHeaderString("Authorization").substring("Bearer ".length());
-
       try {
+
+        if (tokenIsExpired(token)) {
+           throw new NotAuthorizedException("Your authorization token has timed out, please login again",Response.Status.UNAUTHORIZED);
+        }
+
         String username = getUsernameFromToken(token);
         final User user = getUserByName(username);
-        if(user == null){
-          makeErrorResponse(request, "Request could not be authenticated");
-          return;
+        if (user == null) {
+          throw new NotAuthorizedException("User could not be authenticated via the provided token",Response.Status.FORBIDDEN);
         }
 
         request.setSecurityContext(new SecurityContext() {
@@ -83,22 +89,18 @@ public class JWTAuthenticationFilter implements ContainerRequestFilter {
         });
 
       } catch (ParseException | JOSEException e) {
-        makeErrorResponse(request, "Request could not be authenticated");
+        throw new NotAuthorizedException("You are not authorized to perform this action",Response.Status.FORBIDDEN);        
       }
     }
   }
 
-  private void makeErrorResponse(ContainerRequestContext request,String msg) {
-    JsonObject responseJson = new JsonObject();
-    responseJson.addProperty("error", msg);
-    request.abortWith(Response.status(Response.Status.UNAUTHORIZED).entity(new Gson().toJson(responseJson)).build());
-  }
 
   EntityManagerFactory emf = Persistence.createEntityManagerFactory("StudyPointSystemPU");
+
   private User getUserByName(String name) {
     StudyPointUserFacade facade = new StudyPointUserFacade(emf);
-    StudyPointUser user =facade.findStudyPointUser(name);
-    if(user != null){
+    StudyPointUser user = facade.findStudyPointUser(name);
+    if (user != null) {
       return new User(user.getUserName(), user.getRolesAsStrings());  //Load from database
     }
     return null;
@@ -118,6 +120,16 @@ public class JWTAuthenticationFilter implements ContainerRequestFilter {
       }
     }
 
+    return false;
+  }
+
+  private boolean tokenIsExpired(String token) throws ParseException, JOSEException {
+    SignedJWT signedJWT = SignedJWT.parse(token);
+    JWSVerifier verifier = new MACVerifier(Secrets.ADMIN);
+
+    if (signedJWT.verify(verifier)) {
+      return new Date().getTime() > signedJWT.getJWTClaimsSet().getExpirationTime().getTime();
+    }
     return false;
   }
 

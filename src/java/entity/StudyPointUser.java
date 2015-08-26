@@ -5,10 +5,12 @@ import entity.StudyPoint;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
+import static javax.persistence.GenerationType.TABLE;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
@@ -16,23 +18,30 @@ import javax.persistence.ManyToMany;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
+import javax.persistence.OrderBy;
+import javax.persistence.OrderColumn;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.PrimaryKeyJoinColumns;
+import javax.persistence.Table;
 import javax.persistence.TableGenerator;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
+import org.hibernate.validator.constraints.Email;
+
 
 /**
  *
  * @author plaul1
  */
 @Entity
-@NamedQueries({
-   @NamedQuery(name = "StudyPointUser.findByUsername", query = "SELECT s FROM StudyPointUser s WHERE s.userName = :username")})
+@Table(name = "STUDYPOINT_USER")
+@NamedQueries({ @NamedQuery(name = "StudyPointUser.findByUsername", query = "SELECT s FROM StudyPointUser s WHERE s.userName = :username")})
 public class StudyPointUser implements Serializable {
   
   private static final long serialVersionUID = 1L;
   @Id
-  @TableGenerator(table = "IDs", name = "idGenerator", initialValue = 10000)
-  @GeneratedValue(strategy = GenerationType.TABLE,generator = "idGenerator")
+  //@TableGenerator(table = "IDs", name = "idGenerator", initialValue = 10000)
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Integer id;
 
   @ManyToMany(mappedBy = "users")
@@ -41,8 +50,25 @@ public class StudyPointUser implements Serializable {
   public List<SP_Class> getsP_Classes() {
     return sP_Classes;
   }
+
+  public StudyPointUser(String userName, String firstName, String lastName, String email, String phone) {
+    this.userName = userName;
+    this.firstName = firstName;
+    this.lastName = lastName;
+    this.passwordInitial = userName;
+    this.email = email;
+    this.phone = phone;
+    this.password = userName;
+  }
+
+  public StudyPointUser() {
+  }
   
-  @OneToMany(mappedBy = "studyPointUser")
+  
+  
+  @OneToMany(mappedBy = "studyPointUser", cascade = CascadeType.ALL)
+  //@OrderBy("id")
+  @OrderColumn(name= "insertOrderColumn")
   private List<StudyPoint> studyPoints = new ArrayList();
 
   public void setStudyPoints(List<StudyPoint> studyPoints) {
@@ -63,19 +89,22 @@ public class StudyPointUser implements Serializable {
   }
 
   
-  @ManyToMany
-  @JoinTable(name = "studyPointUsers_roles", joinColumns = {
+  @ManyToMany(cascade = CascadeType.PERSIST)
+  @JoinTable(name = "STUDYPOINTUSER_ROLES", joinColumns = {
   @JoinColumn(name = "userName", referencedColumnName = "userName")}, inverseJoinColumns = {
   @JoinColumn(name = "roleName")})
 
   private List<UserRole> roles = new ArrayList();
   
   @Column(unique=true)
+  @Size(min=2, message = "Username must include a minimum of two characters")
   private String userName;
   
   private String firstName;
   private String lastName;
   private String passwordInitial;
+   
+  @Email   //Hibernate validation, not JPA
   private String email;
   private String phone;
   //private String UserRole;
@@ -172,6 +201,9 @@ public class StudyPointUser implements Serializable {
   }
   
   public void addClass(SP_Class _class){
+    if(sP_Classes == null){
+      sP_Classes = new ArrayList();
+    }
     sP_Classes.add(_class);
   }
   public void addStudyPoint(StudyPoint sp){

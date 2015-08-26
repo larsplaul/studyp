@@ -1,13 +1,19 @@
 
 package rest;
 
+import entity.exceptions.NonexistentEntityException;
+import entity.exceptions.PreexistingEntityException;
 import facade.JsonAssembler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.Produces;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -32,11 +38,22 @@ public class Admin {
   @GET
   @Produces("application/json")
   public Response getClasses() {
-    System.out.println(context.getAbsolutePath());
     return Response
             .status(200)
             .header("Access-Control-Allow-Origin", "*")
             .entity(jsonAssembler.getAllClasses())
+            .build();
+  }
+  
+  @Path("users")
+  @GET
+  @Produces("application/json")
+  public Response getUsers() {
+    
+    return Response
+            .status(200)
+            .header("Access-Control-Allow-Origin", "*")
+            .entity(jsonAssembler.getAllUsers())
             .build();
   }
   
@@ -105,6 +122,74 @@ public class Admin {
             .build();
   }
   
+  @Path("addEditUser")
+  @POST
+  @Produces("application/json")
+  @Consumes("application/json")
+  public Response makeNewUser(String data) throws PreexistingEntityException{
+    String result = jsonAssembler.makeUser(data);
+    return Response
+            .status(200)
+//            .header("Access-Control-Allow-Origin", "*")
+//            .header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Origin, Authorization, Accept, Client-Security-Token, Accept-Encoding")
+//            .header("Access-Control-Allow-Credentials", "true")
+//            .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD")
+//            .header("Access-Control-Max-Age", "1209600")
+            .entity(result)
+            .build();
+  }
+  
+  @Path("addEditUser")
+  @PUT
+  @Produces("application/json")
+  @Consumes("application/json")
+  public Response editUser(String data) throws PreexistingEntityException, NonexistentEntityException{
+    String result = jsonAssembler.editUser(data,null);
+    return Response
+            .status(200)
+//            .header("Access-Control-Allow-Origin", "*")
+//            .header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Origin, Authorization, Accept, Client-Security-Token, Accept-Encoding")
+//            .header("Access-Control-Allow-Credentials", "true")
+//            .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD")
+//            .header("Access-Control-Max-Age", "1209600")
+            .entity(result)
+            .build();
+  }
+  
+  
+  @Path("resetPasswordFor/{id}")
+  @PUT
+  @Produces("application/json")
+  @Consumes("application/json")
+  public Response changePasswordForUser(@PathParam("id") int id){
+    return Response
+            .status(200)
+//            .header("Access-Control-Allow-Origin", "*")
+//            .header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Origin, Authorization, Accept, Client-Security-Token, Accept-Encoding")
+//            .header("Access-Control-Allow-Credentials", "true")
+//            .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD")
+//            .header("Access-Control-Max-Age", "1209600")
+            .entity(jsonAssembler.resetPassword(id))
+            .build();
+  }
+  
+  
+  @Path("deleteUser/{userId}")
+  @DELETE
+  @Produces("application/json")
+  @Consumes("application/json")
+  public Response deleteUser(@PathParam("userId") int id){
+    String result = jsonAssembler.deleteUser(id);
+    return Response
+            .status(200)
+//            .header("Access-Control-Allow-Origin", "*")
+//            .header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Origin, Authorization, Accept, Client-Security-Token, Accept-Encoding")
+//            .header("Access-Control-Allow-Credentials", "true")
+//            .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD")
+//            .header("Access-Control-Max-Age", "1209600")
+            .entity(result)
+            .build();
+  }
   
   @Path("removeFromClass")
   @PUT

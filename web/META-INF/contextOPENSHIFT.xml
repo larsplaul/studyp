@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Context antiJARLocking="true" path="/StudyPointSystem">
+  <Resource description="Data" 
+            driverClassName="com.mysql.jdbc.Driver" 
+            maxActive="10" maxIdle="3" 
+            maxWait="10000" 
+            name="jdbc/studypoint"
+            password="${OPENSHIFT_MYSQL_DB_PASSWORD}" 
+            type="javax.sql.DataSource" 
+            url="jdbc:mysql://${OPENSHIFT_MYSQL_DB_HOST}:${OPENSHIFT_MYSQL_DB_PORT}/studypoint" 
+            username="${OPENSHIFT_MYSQL_DB_USERNAME}"/>
+  
+ 
+  <ResourceLink global="jdbc/studypoint" name="jdbc/studypoint" type="javax.sql.DataSource"/>
+  
+<!--   <Realm className="org.apache.catalina.realm.DataSourceRealm"
+           userTable="studypointuser" 
+          userNameCol="USERNAME" 
+          userCredCol="PASSWORD"
+          userRoleTable="studypointusers_roles" 
+          roleNameCol="roleName"
+           localDataSource="true"
+           dataSourceName="jdbc/studypoint"/>-->
+   
+  
+</Context>

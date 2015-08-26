@@ -6,12 +6,15 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
 @Entity
+@Table(name="STUDYPOINT")
 public class StudyPoint implements Serializable {
   private static final long serialVersionUID = 1L;
   @Id
-  @GeneratedValue(strategy = GenerationType.AUTO, generator = "idGenerator")
+ // @GeneratedValue(strategy = GenerationType.AUTO, generator = "idGenerator")
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Integer id;
   
   @ManyToOne
@@ -25,6 +28,14 @@ public class StudyPoint implements Serializable {
 
   public StudyPoint() {
   }
+
+  public StudyPoint(Task task, StudyPointUser studyPointUser) {
+    this.task = task;
+    this.studyPointUser = studyPointUser;
+    this.score = 0;
+  }
+  
+  
   
   public Integer getId() {
     return id;

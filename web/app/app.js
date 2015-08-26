@@ -4,6 +4,7 @@
 angular.module('myAppRename', [
   'ngRoute',
   'ui.bootstrap',
+  'angularUtils.directives.dirPagination',
   'myAppRename.controllers',
   'myAppRename.directives',
   'myAppRename.factories',
@@ -14,6 +15,7 @@ angular.module('myAppRename', [
   'myAppRename.admin.studypoint',
   'myAppRename.admin.studyPointsForStudent',
   'myAppRename.admin.editClass',
+  'myAppRename.viewUsersDetails',
   //'myAppRename.admin.gridDemo',
   'angularjs-dropdown-multiselect'
 ]).

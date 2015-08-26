@@ -6,23 +6,25 @@ var app = angular.module('myAppRename.factories', []);
 
 app.factory('restErrorHandler', function () {
     var handleErrors = function (data,status,$scope){
+       $scope.error = data.error;
       if (status == 401) {
-        if (data.error == "jwt expired") {
+        //if (data.error == "jwt expired") {
+          $scope.error = data.error;
           $scope.$emit("logOutEvent");
-          return;
-        }
-        $scope.error = "You are not authenticated to request these data";
+          
+        //}
+        //$scope.error = "You are not authenticated to request these data";
         return;
       }
       if (status == 403) {
-        if (data.error == "jwt expired") {
+       // if (data.error == "jwt expired") {
           $scope.$emit("logOutEvent");
-          return;
-        }
-        $scope.error = "You are not authenticated to request these data";
+        
+        //}
+        //$scope.error = "You are not authenticated to request these data";
         return;
       }
-      $scope.error = data.toString();
+      //$scope.error = data.error;
     }
     return {
       handleErrors: handleErrors

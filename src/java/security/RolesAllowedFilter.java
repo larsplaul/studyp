@@ -8,6 +8,7 @@ import javax.annotation.Priority;
 import javax.annotation.security.DenyAll;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
+import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -22,6 +23,7 @@ public class RolesAllowedFilter implements ContainerRequestFilter {
 
   private static final Response NOT_FOUND = Response.status(
           Response.Status.NOT_FOUND).entity("{\"message\": \"Resource Not Found\"}").build();
+      
 
   @Context
   private ResourceInfo resourceInfo;
@@ -32,8 +34,9 @@ public class RolesAllowedFilter implements ContainerRequestFilter {
 
     // DenyAll on the method take precedence over RolesAllowed and PermitAll
     if (resourceMethod.isAnnotationPresent(DenyAll.class)) {
-      requestContext.abortWith(NOT_FOUND);
-      return;
+      //requestContext.abortWith(NOT_FOUND);
+      throw new NotAuthorizedException("Resourse Not Found",Response.Status.NOT_FOUND);
+      //return;
     }
 
     // RolesAllowed on the method takes precedence over PermitAll
@@ -49,7 +52,8 @@ public class RolesAllowedFilter implements ContainerRequestFilter {
     }
 
     if (resourceInfo.getResourceClass().isAnnotationPresent(DenyAll.class)) {
-      requestContext.abortWith(NOT_FOUND);
+      //requestContext.abortWith(NOT_FOUND);
+      throw new NotAuthorizedException("Resourse Not Found",Response.Status.NOT_FOUND);
     }
 
     // RolesAllowed on the class takes precedence over PermitAll
@@ -69,7 +73,8 @@ public class RolesAllowedFilter implements ContainerRequestFilter {
         }
       }
       //requestContext.abortWith(NOT_FOUND);
-      abort(requestContext);
+      //abort(requestContext);
+      throw new NotAuthorizedException("You are not authorized to perform the requested operation",Response.Status.UNAUTHORIZED);
     }
     return false;
   }

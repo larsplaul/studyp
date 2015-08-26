@@ -13,6 +13,10 @@
     "angular-route": "~1.4.0",
     "angular-loader": "~1.4.0",
     "angular-mocks": "~1.4.0",
-    "bootstrap-ui": "~0.13.1"
+    "bootstrap-ui": "~0.13.1",
+    "angular-utils-pagination": "~0.8.3"
+  },
+  "resolutions": {
+    "angular-bootstrap": "~0.13.3"
   }
 }

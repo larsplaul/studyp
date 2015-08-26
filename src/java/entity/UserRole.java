@@ -12,12 +12,14 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
+import javax.persistence.Table;
 
 /**
  *
  * @author plaul1
  */
 @Entity
+@Table(name="USER_ROLE")
 public class UserRole implements Serializable {
   @ManyToMany(mappedBy = "roles")
   private List<StudyPointUser> studyPointUsers;

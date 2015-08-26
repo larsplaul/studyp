@@ -48,7 +48,7 @@ var app = angular.module('myAppRename.controllers', []);
           var profile = JSON.parse(url_base64_decode(encodedProfile));
           $scope.username = profile.username;
           $scope.isAdmin = profile.role === "Admin";
-          $scope.isUser = !$scope.isAdmin;
+          $scope.isUser = profile.role === "User";
           $scope.error = null;
           $location.path("#/view1");
         })
@@ -56,7 +56,8 @@ var app = angular.module('myAppRename.controllers', []);
           // Erase the token if the user fails to log in
           delete $window.sessionStorage.token;
           $scope.isAuthenticated = false;
-          $scope.error = 'You failed to login. Invalid User or Password';
+          $scope.error = data.error;
+          $scope.error.description= null; //Not need for more info than what is provided in message
           $scope.logout();  //Clears an eventual error message from timeout on the inner view
         });
     };

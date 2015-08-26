@@ -15,6 +15,7 @@ import java.util.Date;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -41,17 +42,14 @@ public class Login {
       responseJson.addProperty("username", username);
       responseJson.addProperty("token", token);  
       return Response.ok(new Gson().toJson(responseJson)).build();
-    }
-    responseJson.addProperty("error", "Ilegal username or password");
-    return Response.status(Response.Status.NOT_FOUND).entity(new Gson().toJson(responseJson)).build();
-
+    }  
+    throw new NotAuthorizedException("Ilegal username or password",Response.Status.UNAUTHORIZED);
   }
   
   private String  authenticate(String userName, String password){
     EntityManagerFactory emf = Persistence.createEntityManagerFactory("StudyPointSystemPU");
     StudyPointUserFacade facade = new StudyPointUserFacade(emf);
     return facade.authenticateUser(userName, password);
-     
   }
 
   private String createToken(String subject, String issuer, String role) throws JOSEException {
@@ -64,7 +62,7 @@ public class Login {
     claimsSet.setCustomClaim("role", role);
     Date date = new Date();
     claimsSet.setIssueTime(date);
-    claimsSet.setExpirationTime(new Date(date.getTime()+1000));
+    claimsSet.setExpirationTime(new Date(date.getTime() + 1000*60*60*24));
     claimsSet.setIssuer(issuer);
 
     SignedJWT signedJWT = new SignedJWT(new JWSHeader(JWSAlgorithm.HS256), claimsSet);

@@ -17,7 +17,9 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.NoResultException;
 import javax.persistence.Persistence;
+import javax.ws.rs.NotAuthorizedException;
 
 /**
  *
@@ -196,7 +198,11 @@ public class StudyPointUserFacade implements Serializable {
       //Todo System is hardcode to allow only one role per user
       return user != null && user.getPassword().equals(password) ? user.getRoles().get(0).getRoleName() : null;
       //throw new SecurityException("Username and or password does not match any known entities");
-    } finally {
+    }
+    catch(NoResultException ex){
+      throw new NotAuthorizedException("Invalid user name or password",ex);
+    }
+    finally {
       em.close();
     }
   }

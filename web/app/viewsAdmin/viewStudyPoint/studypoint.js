@@ -6,15 +6,35 @@ var users = [];
 var app = angular.module('myAppRename.admin.studypoint', ['ngRoute']);
 
 app.config(['$routeProvider', function ($routeProvider) {
-  $routeProvider.when('/view_admin_studypoints', {
-    templateUrl: 'app/viewsAdmin/viewStudyPoint/studypoint.html',
-    controller: 'AdminStudyPointCtrl'
-  });
-}]);
+    $routeProvider.when('/view_admin_studypoints', {
+      templateUrl: 'app/viewsAdmin/viewStudyPoint/studypoint.html',
+      controller: 'AdminStudyPointCtrl'
+    });
+  }]);
+
+app.directive('ngModel', function () {
+  return {
+    require: 'ngModel',
+    link: function (scope, elem, attr, ngModel) {
+      elem.on('blur', function () {
+        ngModel.$dirty = true;
+        scope.$apply();
+      });
+
+      ngModel.$viewChangeListeners.push(function () {
+        ngModel.$dirty = false;
+      });
+
+      scope.$on('$destroy', function () {
+        elem.off('blur');
+      });
+    }
+  }
+});
 
 app.filter("sumOfAllPoints", function () {
   return function (student) {
-    if (typeof(student) == "undefined") {
+    if (typeof (student) == "undefined") {
       return 0;
     }
     var sum = 0;
@@ -49,18 +69,18 @@ app.filter("filterTasks", function () {
 
 app.controller('AdminStudyPointCtrl', function ($scope, $http, $modal, $location, restErrorHandler) {
 
-
+  $scope.waiting = false;
   $scope.predicate = 'fullName';
   $scope.filteredTasks = "";
 
   //$http.get("adminApi/class")
   $http.get("api/admin/classes")
-    .success(function (data, status, headers, config) {
-      $scope.classes = data;
-    })
-    .error(function (data, status, headers, config) {
-      restErrorHandler.handleErrors(data, status, $scope);
-    })
+          .success(function (data, status, headers, config) {
+            $scope.classes = data;
+          })
+          .error(function (data, status, headers, config) {
+            restErrorHandler.handleErrors(data, status, $scope);
+          })
 
 
   function dirtyCheckOnRouteNavigation() {
@@ -91,20 +111,20 @@ app.controller('AdminStudyPointCtrl', function ($scope, $http, $modal, $location
   $scope.getClass = function (id) {
     //http.get("adminApi/classFromId/" + id)
     $http.get("api/admin/classFromId/" + id)
-      .success(function (data, status, headers, config) {
-        $scope.period = null;
-        $scope.selectedClass = data;
-      })
-      .error(function (data, status, headers, config) {
-        restErrorHandler.handleErrors(data, status, $scope);
-      })
+            .success(function (data, status, headers, config) {
+              $scope.period = null;
+              $scope.selectedClass = data;
+            })
+            .error(function (data, status, headers, config) {
+              restErrorHandler.handleErrors(data, status, $scope);
+            })
   }
 
   $scope.showPeriod = function (id) {
     dirtyCheckOnRouteNavigation();
-    
-   //TODO --> IS this nessecary: 
-   //$scope.period = null;
+
+    //TODO --> IS this nessecary: 
+    //$scope.period = null;
     if ($scope.studyPointForm.$dirty) {
       var modalInstance = $modal.open({
         templateUrl: 'DirtyForm.html',
@@ -125,18 +145,22 @@ app.controller('AdminStudyPointCtrl', function ($scope, $http, $modal, $location
   }
 
   function getPeriod(id) {
-    //$http.get("adminApi/period/" + id)
-      $http.get("api/admin/period/" + id)
-      .success(function (data, status, headers, config) {
-        $scope.period = data;
-        //$scope.rows = $scope.period.students.length;
-        $scope.rows = $scope.period.students.length;
-       
-        $scope.studyPointForm.$dirty = false;
-      })
-      .error(function (data, status, headers, config) {
-        restErrorHandler.handleErrors(data, status, $scope);
-      });
+    $scope.waiting = true;
+    $scope.period = null;
+    $http.get("api/admin/period/" + id)
+            .success(function (data, status, headers, config) {
+              $scope.period = data;
+      $scope.waiting = false;
+              //$scope.rows = $scope.period.students.length;
+              $scope.rows = $scope.period.students.length;
+
+              $scope.studyPointForm.$dirty = false;
+            })
+            .error(function (data, status, headers, config) {
+              $scope.waiting = false;
+              restErrorHandler.handleErrors(data, status, $scope);
+      
+            });
   }
 
   $scope.savePeriod = function () {
@@ -149,25 +173,25 @@ app.controller('AdminStudyPointCtrl', function ($scope, $http, $modal, $location
       });
     });
 
- // $http.put("adminApi/period", $scope.period)
-  $http.put("api/admin/scores", scores)
-    .success(function (data, status, headers, config) {
-      //TODO--> Should we return the saved data ??? 
-      //$scope.period = null;
-     //TODO --> CHECK this $scope.rows = $scope.selectedClass.students.length;
-     //$scope.rows = $scope.period.students.length;
-      $scope.studyPointForm.$dirty = false;
-    })
-    .error(function (data, status, headers, config) {
-      restErrorHandler.handleErrors(data, status, $scope);
-    })
-}
+    // $http.put("adminApi/period", $scope.period)
+    $http.put("api/admin/scores", scores)
+            .success(function (data, status, headers, config) {
+              //TODO--> Should we return the saved data ??? 
+              //$scope.period = null;
+              //TODO --> CHECK this $scope.rows = $scope.selectedClass.students.length;
+              //$scope.rows = $scope.period.students.length;
+              $scope.studyPointForm.$dirty = false;
+            })
+            .error(function (data, status, headers, config) {
+              restErrorHandler.handleErrors(data, status, $scope);
+            })
+  }
 //Used to se the Tab-index (when a double {{..}} expression is used is seems not no threat a number a number but as a string
-$scope.calculateTabIndex = function (str) {
-  return Number(str) + 1;
-}
+  $scope.calculateTabIndex = function (str) {
+    return Number(str) + 1;
+  }
 })
-;
+        ;
 
 app.controller('DirtyFormCtrl', function ($scope, $modalInstance) {
 

@@ -9,8 +9,11 @@ import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
+import javax.persistence.OrderBy;
+import javax.persistence.Table;
 
 @Entity
+@Table(name = "SP_CLASS")
 public class SP_Class implements Serializable {
   private static final long serialVersionUID = 1L;
   @Id
@@ -50,6 +53,7 @@ public class SP_Class implements Serializable {
   
   
   @ManyToMany
+  @OrderBy("id")
   private List<StudyPointUser> users = new ArrayList();
 
   public String getId() {

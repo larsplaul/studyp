@@ -1,1 +1,4 @@
 Solve inconsistency with multiple roles (allowed by DB, not Server or Client)
+
+I create a separeate SemesterPeriod with Task's for each class even for semesters with more than one class.
+This leads to redundancy, but is made to allow for differences between the classes, which otherwise could not be handleded

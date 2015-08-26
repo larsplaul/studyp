@@ -1,26 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Context antiJARLocking="true" path="/StudyPointSystem">
-  <Resource description="Data" 
+<!-- <Resource description="Data" 
             driverClassName="com.mysql.jdbc.Driver" 
             maxActive="10" maxIdle="3" 
             maxWait="10000" 
-            name="jdbc/studypoint"
+            name="jdbc/SP"
             password="test" 
             type="javax.sql.DataSource" 
             url="jdbc:mysql://localhost:3306/studypoint?zeroDateTimeBehavior=convertToNull" 
-            username="root"/>
+            username="root"/>-->
+
+            
+                    
+        
+         <Resource description="Data" 
+            driverClassName="com.mysql.jdbc.Driver" 
+            maxActive="100" maxIdle="3" 
+            maxWait="10000" 
+            name="jdbc/SP"
+            password="h5y6595cInSA" 
+            type="javax.sql.DataSource" 
+            url="jdbc:mysql://127.10.110.130:3306/studypoint" 
+            username="adminN9GrfHL"/>
+                         
+
   
-  <!--<Resource auth="Container" driverClassName="com.mysql.jdbc.Driver" maxActive="20" maxIdle="10" maxWait="-1" name="jdbc/demo" password="test" type="javax.sql.DataSource" url="jdbc:mysql://localhost:3306/studypoint?zeroDateTimeBehavior=convertToNull" username="root"/>-->
-  <ResourceLink global="jdbc/studypoint" name="jdbc/studypoint" type="javax.sql.DataSource"/>
+ 
+  <ResourceLink global="jdbc/studypoint" name="jdbc/studypoint" type="javax.sql.DataSource"/>-->
   
-   <Realm className="org.apache.catalina.realm.DataSourceRealm"
+<!--   <Realm className="org.apache.catalina.realm.DataSourceRealm"
            userTable="studypointuser" 
           userNameCol="USERNAME" 
           userCredCol="PASSWORD"
           userRoleTable="studypointusers_roles" 
           roleNameCol="roleName"
            localDataSource="true"
-           dataSourceName="jdbc/studypoint"/>
+           dataSourceName="jdbc/studypoint"/>-->
    
   
 </Context>

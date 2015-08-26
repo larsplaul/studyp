@@ -30,7 +30,15 @@ public class ApplicationConfig extends Application {
    */
   private void addRestResourceClasses(Set<Class<?>> resources) {
     resources.add(rest.Admin.class);
+    resources.add(rest.AllRoles.class);
     resources.add(rest.Login.class);
+    resources.add(rest.Student.class);
+    resources.add(rest.StudyAdministration.class);
+    resources.add(rest.errorhandling.ConstraintValidationExceptionMapper.class);
+    resources.add(rest.errorhandling.GenericExceptionMapper.class);
+    resources.add(rest.errorhandling.NotAuthorizedExceptionMapper.class);
+    resources.add(rest.errorhandling.PreExistentEntityExceptionMapper.class);
+    resources.add(rest.errorhandling.SecurityExceptionMapper.class);
     resources.add(security.JWTAuthenticationFilter.class);
     resources.add(security.RolesAllowedFilter.class);
   }

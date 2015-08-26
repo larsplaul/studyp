@@ -7,20 +7,29 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 import entity.SP_Class;
 import entity.SemesterPeriod;
 import entity.StudyPoint;
 import entity.StudyPointUser;
 import entity.Task;
+import entity.UserRole;
+import entity.exceptions.NonexistentEntityException;
+import entity.exceptions.PreexistingEntityException;
 import java.util.ArrayList;
 import static java.util.Collections.list;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.NoResultException;
 import javax.persistence.Persistence;
+import javax.persistence.Query;
 
 public class JsonAssembler {
 
@@ -35,15 +44,53 @@ public class JsonAssembler {
   public String getAllClasses() {
     ClassFacade classFacade = new ClassFacade(emf);
     List<SP_Class> classes = classFacade.findSP_ClassEntities();
-    JsonArray jsonClasses = new JsonArray();
-    for (SP_Class c : classes) {
-      JsonObject jo = new JsonObject();
-      jo.addProperty("_id", c.getId());
-      jo.addProperty("nameShort", c.getNameShort());
-      jsonClasses.add(jo);
+    return makeJsonForClasses(classes);
+  }
+
+  public String getUser(String userName) {
+    EntityManager em = getEntityManager();
+    try {
+      StudyPointUser user = getUserFromUserName(em, userName);
+      return gson.toJson(makeJsonUser(user));
+    } finally {
+      em.close();
     }
-    String jsonStr = gson.toJson(jsonClasses); //The JSON string is ready
-    return jsonStr;
+  }
+
+  private StudyPointUser getUserFromUserName(EntityManager em, String userName) {
+    Query query = em.createNamedQuery("StudyPointUser.findByUsername", StudyPointUser.class);
+    query.setParameter("username", userName);
+    StudyPointUser user = (StudyPointUser) query.getSingleResult();
+    return user;
+  }
+
+  public String getAllUsers() {
+    StudyPointUserFacade userFacade = new StudyPointUserFacade(emf);
+    List<StudyPointUser> allUsers = userFacade.findStudyPointUserEntities();
+    JsonArray jsonStudents = new JsonArray();
+    for (StudyPointUser user : allUsers) {
+      JsonObject userAssJson = makeJsonUser(user);
+      jsonStudents.add(userAssJson);
+    }
+    return gson.toJson(jsonStudents);
+  }
+
+  private JsonObject makeJsonUser(StudyPointUser user) {
+    JsonObject userAssJson = new JsonObject();
+    userAssJson.addProperty("_id", user.getId());
+    userAssJson.addProperty("firstName", user.getFirstName());
+    userAssJson.addProperty("lastName", user.getLastName());
+    userAssJson.addProperty("phone", user.getPhone());
+    userAssJson.addProperty("email", user.getEmail());
+    userAssJson.addProperty("user", user.getUserName());
+    String roleName = user.getRoles().size() > 0 ? user.getRoles().get(0).getRoleName() : "";
+    userAssJson.addProperty("role", roleName);
+    JsonArray usersClasses = new JsonArray();
+    for (SP_Class spClass : user.getsP_Classes()) {
+      usersClasses.add(new JsonPrimitive(spClass.getId()));
+    }
+    userAssJson.add("classes", usersClasses);
+    return userAssJson;
   }
 
   /*
@@ -53,15 +100,7 @@ public class JsonAssembler {
     EntityManager em = getEntityManager();
     try {
       List<SP_Class> classes = em.find(StudyPointUser.class, studentId).getsP_Classes();
-      JsonArray jsonClasses = new JsonArray();
-      for (SP_Class c : classes) {
-        JsonObject jo = new JsonObject();
-        jo.addProperty("_id", c.getId());
-        jo.addProperty("nameShort", c.getNameShort());
-        jsonClasses.add(jo);
-      }
-      String jsonStr = gson.toJson(jsonClasses);
-      return jsonStr;
+      return makeJsonForClasses(classes);
     } finally {
       em.close();
     }
@@ -185,6 +224,7 @@ public class JsonAssembler {
       for (StudyPoint studyPoint : user.getStudyPoints(id)) {
         JsonObject jsonStudyPoint = new JsonObject();
         jsonStudyPoint.addProperty("id", studyPoint.getId());
+        jsonStudyPoint.addProperty("forTask", studyPoint.getTask().getName());
         jsonStudyPoint.addProperty("maxScore", studyPoint.getTask().getMaxScore());
         jsonStudyPoint.addProperty("score", studyPoint.getScore());
         //jsonStudyPoint.addProperty("userId", studyPoint.getStudyPointUser().getId());//TODO Remove me
@@ -231,9 +271,9 @@ public class JsonAssembler {
       for (Iterator<StudyPointUser> iter = theClass.getUsers().listIterator(); iter.hasNext();) {
         StudyPointUser user = iter.next();
         for (int idToRemove : studentsToRemove) {
-           if(user.getId() == idToRemove){
-             iter.remove();
-           }
+          if (user.getId() == idToRemove) {
+            iter.remove();
+          }
         }
       }
       em.merge(theClass);
@@ -243,5 +283,397 @@ public class JsonAssembler {
     }
 
     return "todo";
+  }
+
+  public String makeUser(String userAsJson) throws PreexistingEntityException {
+    JsonObject jsonClass = new JsonParser().parse(userAsJson).getAsJsonObject();
+    String userName = jsonClass.get("user").getAsString();
+    String fName = jsonClass.get("firstName").getAsString();
+    String lName = jsonClass.get("lastName").getAsString();
+    String phone = jsonClass.get("phone").getAsString();
+    String role = jsonClass.get("role").getAsString();
+    String email = jsonClass.get("email").getAsString();
+    JsonArray classesJson = jsonClass.getAsJsonArray("classes");
+    List<String> classes = new ArrayList();
+    if (classesJson != null) {
+      for (JsonElement classJson : classesJson) {
+        classes.add(classJson.getAsString());
+      }
+    }
+    StudyPointUser user = new StudyPointUser(userName, fName, lName, email, phone);
+    EntityManager em = emf.createEntityManager();
+    checkUniqueProperties(em, "userName", userName);
+    checkUniqueProperties(em, "email", email);
+    em.getTransaction().begin();
+    for (String classId : classes) {
+      SP_Class spClass = em.find(SP_Class.class, classId);
+      //create default StudyPoints for existing tasks
+      for (SemesterPeriod period : spClass.getPeriods()) {
+        for (Task task : period.getTasks()) {
+          StudyPoint sp = new StudyPoint(task, user);
+          task.addStudyPoint(sp);
+          em.merge(task);
+          user.addStudyPoint(sp);
+        }
+      }
+    }
+    em.persist(user);
+
+    for (String classId : classes) {
+      SP_Class spClass = em.find(SP_Class.class, classId);
+      user.addClass(spClass);
+      spClass.addStudyPointUser(user);
+      em.merge(spClass);
+    }
+    UserRole userRole = em.find(UserRole.class, role);
+    userRole.addStudyPointUser(user);
+    user.addRole(userRole);
+    em.merge(userRole);
+    user = em.merge(user); //Should get the user with the autogenerated id
+    em.flush();
+    em.getTransaction().commit();
+    em.close();
+    return gson.toJson(makeJsonUser(user));
+  }
+
+  public String resetPassword(int id) {
+    EntityManager em = getEntityManager();
+    try {
+      StudyPointUser user = em.find(StudyPointUser.class, id);
+      em.getTransaction().begin();
+      user.setPassword(user.getPasswordInitial());
+      em.merge(user);
+      em.getTransaction().commit();
+      return "{\"info\":\"Password was reset\"}";
+      
+    } finally {
+      em.close();
+    }
+  }
+  
+  public String getTotalStudyPointsForSemester(String classId){
+    ClassFacade classFacade = new ClassFacade(emf);
+    SP_Class c = classFacade.findSP_Class(classId);
+    JsonObject classAsJson = new JsonObject();
+    classAsJson.addProperty("_id", c.getId());
+    classAsJson.addProperty("nameShort", c.getNameShort());
+    classAsJson.addProperty("description", c.getSemesterDescription());
+    classAsJson.addProperty("maxPointForSemester", c.getMaxPointForSemester());
+    classAsJson.addProperty("requiredPoints", c.getRequiredPoints());
+    JsonArray jsonStudents = new JsonArray();
+    for (StudyPointUser user : c.getUsers()) {
+      int pointsEarnedInThisClass = 0;
+      for(StudyPoint sp : user.getStudyPoints()){
+        if(sp.getTask().getSemesterPeriod().getInClass().getId().equals(classId)){
+          pointsEarnedInThisClass+= sp.getScore();
+        }
+      }
+      
+      
+      JsonObject jsonUser = new JsonObject();
+      jsonUser.addProperty("id", user.getId());
+      jsonUser.addProperty("user", user.getUserName());
+      jsonUser.addProperty("name", user.getFirstName()+ " " +user.getLastName());
+      jsonUser.addProperty("points", pointsEarnedInThisClass);
+      jsonStudents.add(jsonUser);
+    }
+    classAsJson.add("Students", jsonStudents);
+    
+    return gson.toJson(classAsJson);
+  }
+
+  public String editPassword(String passwordInfo, String userPrincipal) {
+    EntityManager em = getEntityManager();
+    try {
+      StudyPointUser user = getUserFromUserName(em, userPrincipal);
+      if (user == null) {
+        //todo
+      }
+      JsonObject passwordInfoJson = new JsonParser().parse(passwordInfo).getAsJsonObject();
+      String old = passwordInfoJson.get("old").getAsString();
+      String newPw1 = passwordInfoJson.get("newPw1").getAsString();
+      String newPw2 = passwordInfoJson.get("newPw2").getAsString();
+      if (!user.getPassword().equals(old)) {
+        throw new SecurityException("You did not provide the right original password");
+      }
+      if (!newPw1.equals(newPw2)) {
+        throw new SecurityException("New password and the 'retyped' value does not match");
+      }
+      em.getTransaction().begin();
+      user.setPassword(newPw1);
+      em.merge(user);
+      em.getTransaction().commit();
+      return "{\"info\": \"Password was changed \"}";
+    } finally {
+      em.close();
+    }
+  }
+
+  /*
+   When a user is editing "himself" he can only change name, email and phone, and only for himnself --> we get this user via the UserPrincipal
+   */
+  public String editUser(String userAsJson, String userPrincipal) throws PreexistingEntityException, NonexistentEntityException {
+    JsonObject jsonClass = new JsonParser().parse(userAsJson).getAsJsonObject();
+
+    String userName = null;
+    String role = null;
+    List<String> newClasses = null;
+    int id = jsonClass.get("_id").getAsInt();
+    String fName = jsonClass.get("firstName").getAsString();
+    String lName = jsonClass.get("lastName").getAsString();
+    String phone = jsonClass.get("phone").getAsString();
+    String email = jsonClass.get("email").getAsString();
+    if (userPrincipal == null) {
+      userName = jsonClass.get("user").getAsString();
+      role = jsonClass.get("role").getAsString();
+      JsonArray classesJson = jsonClass.getAsJsonArray("classes");
+      newClasses = new ArrayList();
+      if (classesJson != null) {
+        for (JsonElement classJson : classesJson) {
+          newClasses.add(classJson.getAsString());
+        }
+      }
+    }
+
+    EntityManager em = emf.createEntityManager();
+    StudyPointUser user = null;
+    if (userPrincipal != null) {
+      user = getUserFromUserName(em, userPrincipal);
+    } else {
+      user = em.find(StudyPointUser.class, id);
+    }
+    user.setEmail(email);
+    user.setFirstName(fName);
+    user.setLastName(lName);
+    user.setPhone(phone);
+    em.getTransaction().begin();
+    if (userPrincipal == null) {
+      if (user == null) {
+        throw new NonexistentEntityException(String.format("User with id (%s) not found", id));
+      }
+      if (!user.getUserName().equals(userName)) {
+        checkUniqueProperties(em, "userName", userName);
+      }
+      if (!user.getEmail().equals(email)) {
+        checkUniqueProperties(em, "email", email);
+      }
+
+      user.setUserName(userName);
+      List<String> classesToAdd = new ArrayList();
+
+      removeClassesAndStudyPoints(newClasses, user, em);
+      addClassesAndStudyPoints(newClasses, classesToAdd, em, user);
+    }
+    user = em.merge(user); //Should get the user with the autogenerated id
+    em.flush();
+    em.getTransaction().commit();
+    em.close();
+    return gson.toJson(makeJsonUser(user));
+  }
+
+  private void addClassesAndStudyPoints(List<String> newClasses, List<String> classesToAdd, EntityManager em, StudyPointUser user) {
+    //Find new classes to add
+    for (String newClassId : newClasses) {
+      boolean found = false;
+      for (SP_Class existingClass : user.getsP_Classes()) {
+        if (newClassId.equals(existingClass.getId())) {
+          found = true;
+        }
+      }
+      if (!found) {
+        classesToAdd.add(newClassId);
+      }
+
+    }
+
+    for (String classId : classesToAdd) {
+      SP_Class spClass = em.find(SP_Class.class, classId);
+      //create default StudyPoints for existing tasks
+      for (SemesterPeriod period : spClass.getPeriods()) {
+        for (Task task : period.getTasks()) {
+          StudyPoint sp = new StudyPoint(task, user);
+          task.addStudyPoint(sp);
+          em.merge(task);
+          user.addStudyPoint(sp);
+          em.persist(sp);
+//          em.flush();
+//          System.out.println(""+sp.getId()+ ", " +sp.getTask().getName()+" : "+sp.getTask().getSemesterPeriod().getPeriodName());
+        }
+      }
+    }
+    for (String classId : classesToAdd) {
+      SP_Class spClass = em.find(SP_Class.class, classId);
+      user.addClass(spClass);
+      spClass.addStudyPointUser(user);
+      em.merge(spClass);
+    }
+  }
+  /*
+   Remove thoses classes from existing classes not found in the list "newClasses".
+   Also remove all studypoints (theese will be lost --> perhaps not the right solution) belonging to the user and class being removed
+   */
+
+  private void removeClassesAndStudyPoints(List<String> newClasses, StudyPointUser user, EntityManager em) {
+    //Find classes to remove
+    List<SP_Class> classesToRemove = new ArrayList();
+    for (SP_Class exClass : user.getsP_Classes()) {
+      boolean found = false;
+      for (String classId : newClasses) {
+        if (classId.equals(exClass.getId())) {
+          found = true;
+        }
+      }
+      if (found == false) {
+        classesToRemove.add(exClass);
+        //Delete all studypoint for the student related to the class being removed
+        //Map<Task,List<StudyPoint>> studyPointsToRemoveFromTask = new HashMap();
+
+        for (SemesterPeriod p : exClass.getPeriods()) {
+          for (Task t : p.getTasks()) {
+            //List<StudyPoint> studyPointsToRemove = new ArrayList();
+            for (StudyPoint sp : t.getStudyPoints()) {
+              if (Objects.equals(sp.getStudyPointUser().getId(), user.getId())) {
+                user.getStudyPoints().remove(sp);
+                em.remove(sp);
+              }
+            }
+          }
+        }
+      }
+    }
+    for (SP_Class classToRemove : classesToRemove) {
+      // This HAS to happen outside the itereation to avoid a java.util.ConcurrentModificationException
+      classToRemove.getUsers().remove(user);//Remove user from class
+      user.getsP_Classes().remove(classToRemove);//Remove class from user
+      em.merge(classToRemove);
+    }
+  }
+
+  private void checkUniqueProperties(EntityManager em, String property, String value) throws PreexistingEntityException {
+    Query q = null;
+    q = em.createQuery(String.format("SELECT user FROM StudyPointUser user where user.%s = :value", property));
+    q.setParameter("value", value);
+
+    try {
+      if (q.getSingleResult() != null) {
+        throw new PreexistingEntityException(String.format("%1s %2s is taken", property, value));
+      }
+    } catch (NoResultException ex) {
+      //This is what we would hope for
+    }
+  }
+
+//  public String makeUser(String userAsJson){
+//    JsonObject jsonClass = new JsonParser().parse(userAsJson).getAsJsonObject();
+//    String userName = jsonClass.get("user").getAsString();
+//    String fName = jsonClass.get("firstName").getAsString();
+//    String lName = jsonClass.get("lastName").getAsString();
+//    String phone = jsonClass.get("phone").getAsString();
+//    String role = jsonClass.get("role").getAsString();
+//    String email = jsonClass.get("email").getAsString();
+//    JsonArray classesJson = jsonClass.getAsJsonArray("classes");
+//    List<String> classes = new ArrayList();
+//    for (JsonElement classJson : classesJson) {
+//      classes.add(classJson.getAsString());
+//    }
+//    StudyPointUser user = new StudyPointUser(userName,fName,lName,email,phone);
+//    //ClassFacade classFacade = new ClassFacade(emf);
+//    EntityManager em = emf.createEntityManager();
+//    em.getTransaction().begin();
+//    for(String classId : classes){
+//      //SP_Class spClass =classFacade.findSP_Class(classId);
+//      SP_Class spClass =em.find(SP_Class.class,classId);
+//      user.addClass(spClass);
+//      spClass.addStudyPointUser(user);
+//      em.merge(spClass);
+//      //create default StudyPoints for existing tasks
+//      for(SemesterPeriod period: spClass.getPeriods()){
+//        for(Task task : period.getTasks()){
+//          StudyPoint sp = new StudyPoint(task,user);
+//          task.addStudyPoint(sp);
+//          em.merge(task);
+//          user.addStudyPoint(sp);
+//        }
+//      }
+//      
+//      
+//    }
+//    
+//    UserRole userRole = em.getReference(UserRole.class, role);
+//    //em.close();
+//    user.addRole(userRole);
+//    
+////    StudyPointUserFacade userFacade = new StudyPointUserFacade(emf);
+////    userFacade.create(user);
+//    //em.getTransaction().begin();
+//    
+//    em.persist(user);
+//    
+//    em.getTransaction().commit();
+//    em.close();
+//    return "{\"Todo\": \"Todo\"";
+//  }
+//  
+  public String deleteUser(int id) {
+    EntityManager em = emf.createEntityManager();
+    em.getTransaction().begin();
+    StudyPointUser user = em.find(StudyPointUser.class, id);
+
+    //Object References must be updated, otherwise changes requires a restart of the server
+    for (SP_Class aClass : user.getsP_Classes()) {
+      StudyPointUser userToRemove = null;
+      for (StudyPointUser u : aClass.getUsers()) {
+        if (u.getId() == id) {
+          userToRemove = u;
+          break;
+        }
+      }
+      aClass.getUsers().remove(userToRemove);
+      em.merge(aClass);
+    }
+    em.remove(user);
+    em.getTransaction().commit();
+    em.close();
+
+    return gson.toJson(makeJsonUser(user));
+  }
+
+  // ####################################################################
+  //Methods for the User Role
+  // ####################################################################
+  public String getClassesForCurrentUser(String userName) {
+
+    EntityManager em = getEntityManager();
+    try {
+      StudyPointUser user = getUserFromUserName(em, userName);
+      List<SP_Class> classes = user.getsP_Classes();
+      return makeJsonForClasses(classes);
+    } finally {
+      em.close();
+    }
+  }
+
+  public String getStudyPointsForCurrentUser(String classId, String userName) {
+
+    EntityManager em = getEntityManager();
+    try {
+      StudyPointUser user = getUserFromUserName(em, userName);
+      return getStudyPointsForStudent(classId, user.getId());
+    } finally {
+      em.close();
+    }
+  }
+
+  /*Private Methods */
+  private String makeJsonForClasses(List<SP_Class> classes) {
+    JsonArray jsonClasses = new JsonArray();
+    for (SP_Class c : classes) {
+      JsonObject jo = new JsonObject();
+      jo.addProperty("_id", c.getId());
+      jo.addProperty("nameShort", c.getNameShort());
+      jsonClasses.add(jo);
+    }
+    String jsonStr = gson.toJson(jsonClasses);
+    return jsonStr;
   }
 }

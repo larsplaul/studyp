@@ -8,26 +8,30 @@ package entity;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.Table;
 
 @Entity
+@Table(name="TASK")
 public class Task implements Serializable {
 
   @ManyToOne
   private SemesterPeriod semesterPeriod;
   private static final long serialVersionUID = 1L;
   @Id
-  @GeneratedValue(strategy = GenerationType.TABLE,generator = "idGenerator")
+  //@GeneratedValue(strategy = GenerationType.TABLE,generator = "idGenerator")
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Integer id;
 
   private String name;
   private int maxScore;
-  @OneToMany(mappedBy = "task")
+  @OneToMany(mappedBy = "task", cascade = {CascadeType.PERSIST, CascadeType.REMOVE})
   private final List<StudyPoint> studyPoints = new ArrayList();
 
   public List<StudyPoint> getStudyPoints() {
@@ -41,6 +45,9 @@ public class Task implements Serializable {
     return null;
   }
   
+  public void addStudyPoint(StudyPoint sp){
+    studyPoints.add(sp);
+  }
 
   public SemesterPeriod getSemesterPeriod() {
     return semesterPeriod;

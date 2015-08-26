@@ -41,10 +41,10 @@
               <th>Max</th>
             </tr>
             </thead>
-            <tr ng-repeat="studypoint in period.scores">
+            <tr ng-repeat="task in period.tasks">
               <td>{{period.tasks[$index].name}}</td>
-              <td>{{studypoint.score}}</td>
-              <td>{{studypoint.maxScore}}</td>
+              <td>{{task.score}}</td>
+              <td>{{task.maxScore}}</td>
             </tr>
             <!--<tr class="info">-->
               <!--<td>Total for period</td>-->
