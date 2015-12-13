@@ -5,6 +5,7 @@
  */
 package facade;
 
+import deploy.DeploymentConfiguration;
 import entity.StudyPoint;
 import entity.StudyPointUser;
 import entity.exceptions.NonexistentEntityException;
@@ -20,6 +21,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.NoResultException;
 import javax.persistence.Persistence;
 import javax.ws.rs.NotAuthorizedException;
+import security.FronterLogin;
 
 /**
  *
@@ -176,11 +178,11 @@ public class StudyPointUserFacade implements Serializable {
       em.close();
     }
   }
- 
-  public StudyPointUser findStudyPointUser(String  userName) {
+
+  public StudyPointUser findStudyPointUser(String userName) {
     EntityManager em = getEntityManager();
     try {
-      Query query= em.createNamedQuery("StudyPointUser.findByUsername",StudyPointUser.class);
+      Query query = em.createNamedQuery("StudyPointUser.findByUsername", StudyPointUser.class);
       query.setParameter("username", userName);
       StudyPointUser user = (StudyPointUser) query.getSingleResult();
       return user;
@@ -188,21 +190,43 @@ public class StudyPointUserFacade implements Serializable {
       em.close();
     }
   }
-  
-  public String authenticateUser(String  userName,String password) {
+
+//  public StudyPointUser findUser(String userName) {
+//    EntityManager em = getEntityManager();
+//    try {
+//      Query query = em.createNamedQuery("StudyPointUser.findByUsername", StudyPointUser.class);
+//      query.setParameter("username", userName);
+//      StudyPointUser user = (StudyPointUser) query.getSingleResult();
+//      return user;
+//    } 
+//    catch (NoResultException ex) {
+//      throw new NotAuthorizedException("No user with provide name", ex);
+//    } finally {
+//      em.close();
+//    }
+//  }
+
+  public String authenticateUser(String userName, String password,boolean useFronter) {
     EntityManager em = getEntityManager();
     try {
-      Query query= em.createNamedQuery("StudyPointUser.findByUsername",StudyPointUser.class);
+      Query query = em.createNamedQuery("StudyPointUser.findByUsername", StudyPointUser.class);
       query.setParameter("username", userName);
       StudyPointUser user = (StudyPointUser) query.getSingleResult();
+      
+      //Alway authenticate locally first
       //Todo System is hardcode to allow only one role per user
-      return user != null && user.getPassword().equals(password) ? user.getRoles().get(0).getRoleName() : null;
+      String role = user != null && user.getPassword().equals(password) ? user.getRoles().get(0).getRoleName() : null;
+      
+      if(role == null && useFronter){
+        if(FronterLogin.authenticateViaFronter(userName, password)){
+          role = user.getRoles().get(0).getRoleName();
+        }
+      }
+      return role;
       //throw new SecurityException("Username and or password does not match any known entities");
-    }
-    catch(NoResultException ex){
-      throw new NotAuthorizedException("Invalid user name or password",ex);
-    }
-    finally {
+    } catch (NoResultException ex) {
+      throw new NotAuthorizedException("Invalid user name or password", ex);
+    } finally {
       em.close();
     }
   }
@@ -219,13 +243,13 @@ public class StudyPointUserFacade implements Serializable {
       em.close();
     }
   }
-  
+
   public static void main(String[] args) {
-     EntityManagerFactory emf = Persistence.createEntityManagerFactory("StudyPointSystemPU");
+    EntityManagerFactory emf = Persistence.createEntityManagerFactory(DeploymentConfiguration.PU_NAME);
     StudyPointUserFacade facade = new StudyPointUserFacade(emf);
     StudyPointUser user = facade.findStudyPointUser("test");
     System.out.println(user.getPassword());
     System.out.println(user.getRoles().size());
   }
-  
+
 }

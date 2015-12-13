@@ -1,22 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <persistence version="2.1" xmlns="http://xmlns.jcp.org/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd">
-  <persistence-unit name="StudyPointSystemPU" transaction-type="RESOURCE_LOCAL">
-    <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
-    <non-jta-data-source>java:/comp/env/jdbc/SP</non-jta-data-source>
-    <class>entity.UserRole</class>
-    <class>entity.SP_Class</class>
-    <class>entity.SemesterPeriod</class>
-    <class>entity.StudyPoint</class>
-    <class>entity.StudyPointUser</class>
-    <class>entity.Task</class>
-    <exclude-unlisted-classes>false</exclude-unlisted-classes>
-    <properties>
-      <property name="javax.persistence.schema-generation.database.action" value="create"/>
-      <property name="eclipselink.cache.shared.default" value="false"/>
-    </properties>
-  </persistence-unit>
-  
-<!--  <persistence-unit name="StudyPointSystemPU" transaction-type="RESOURCE_LOCAL">
+  <persistence-unit name="PU-Local" transaction-type="RESOURCE_LOCAL">
     <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
     <exclude-unlisted-classes>false</exclude-unlisted-classes>
     <properties>
@@ -25,16 +9,17 @@
       <property name="javax.persistence.jdbc.driver" value="com.mysql.jdbc.Driver"/>
       <property name="javax.persistence.jdbc.password" value="test"/>
       <property name="javax.persistence.schema-generation.database.action" value="create"/>
+      <property name="eclipselink.canonicalmodel.subpackage" value="development"/>
     </properties>
-     For Portforwarding 
-        <properties>
-      <property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/studypoint?zeroDateTimeBehavior=convertToNull"/>
-      <property name="javax.persistence.jdbc.user" value="adminN9GrfHL"/><property name="javax.persistence.jdbc.user" value="root"/>
+  </persistence-unit>
+  <persistence-unit name="PU_OPENSHIFT" transaction-type="RESOURCE_LOCAL">
+    <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
+    <non-jta-data-source>java:/comp/env/jdbc/MySQLDS</non-jta-data-source>
+    <exclude-unlisted-classes>false</exclude-unlisted-classes>
+    <properties>
       <property name="javax.persistence.jdbc.driver" value="com.mysql.jdbc.Driver"/>
-      <property name="javax.persistence.jdbc.password" value="h5y6595cInSA"/>
-      <property name="javax.persistence.schema-generation.database.action" value="create"/>
+      <property name="eclipselink.canonicalmodel.subpackage" value="deploy"/>
+      <property name="eclipselink.cache.shared.default" value="false"/>
     </properties>
-  </persistence-unit>-->
-  
-  
+  </persistence-unit>
 </persistence>

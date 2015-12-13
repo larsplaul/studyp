@@ -8,6 +8,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
+import deploy.DeploymentConfiguration;
 import entity.SP_Class;
 import entity.SemesterPeriod;
 import entity.StudyPoint;
@@ -33,7 +34,7 @@ import javax.persistence.Query;
 
 public class JsonAssembler {
 
-  EntityManagerFactory emf = Persistence.createEntityManagerFactory("StudyPointSystemPU");
+  EntityManagerFactory emf = Persistence.createEntityManagerFactory(DeploymentConfiguration.PU_NAME);
   private static final Gson gson = new GsonBuilder().setPrettyPrinting().serializeNulls().setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE).create();
   //private static final Gson gson = new GsonBuilder().serializeNulls().setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE).create();
 
@@ -159,10 +160,15 @@ public class JsonAssembler {
   public String getStudyPointsForStudent(String classId, int studentId) {
     ClassFacade classFacade = new ClassFacade(emf);
     SP_Class c = classFacade.findSP_Class(classId);
+    StudyPointUserFacade spFacade = new StudyPointUserFacade(emf);
+    StudyPointUser user = spFacade.findStudyPointUser(studentId);
+    
+    
     JsonObject classAsJson = new JsonObject();
     classAsJson.addProperty("maxPointForSemester", c.getMaxPointForSemester());
     classAsJson.addProperty("requiredPoints", c.getRequiredPoints());
-    classAsJson.addProperty("studentName", "XXXXXX");
+    classAsJson.addProperty("studentName", user.getFirstName()+" "+user.getLastName());
+    classAsJson.addProperty("user", user.getUserName());
     JsonArray jsonPeriods = new JsonArray();
     for (SemesterPeriod p : c.getPeriods()) {
       JsonObject jsonPeriod = new JsonObject();

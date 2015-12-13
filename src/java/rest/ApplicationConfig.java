@@ -32,6 +32,7 @@ public class ApplicationConfig extends Application {
     resources.add(rest.Admin.class);
     resources.add(rest.AllRoles.class);
     resources.add(rest.Login.class);
+    resources.add(rest.RememoteLogin.class);
     resources.add(rest.Student.class);
     resources.add(rest.StudyAdministration.class);
     resources.add(rest.errorhandling.ConstraintValidationExceptionMapper.class);

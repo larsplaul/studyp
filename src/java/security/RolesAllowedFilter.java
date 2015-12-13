@@ -35,7 +35,7 @@ public class RolesAllowedFilter implements ContainerRequestFilter {
     // DenyAll on the method take precedence over RolesAllowed and PermitAll
     if (resourceMethod.isAnnotationPresent(DenyAll.class)) {
       //requestContext.abortWith(NOT_FOUND);
-      throw new NotAuthorizedException("Resourse Not Found",Response.Status.NOT_FOUND);
+      throw new NotAuthorizedException("Resource Not Found",Response.Status.NOT_FOUND);
       //return;
     }
 
@@ -53,7 +53,7 @@ public class RolesAllowedFilter implements ContainerRequestFilter {
 
     if (resourceInfo.getResourceClass().isAnnotationPresent(DenyAll.class)) {
       //requestContext.abortWith(NOT_FOUND);
-      throw new NotAuthorizedException("Resourse Not Found",Response.Status.NOT_FOUND);
+      throw new NotAuthorizedException("Resource Not Found",Response.Status.NOT_FOUND);
     }
 
     // RolesAllowed on the class takes precedence over PermitAll

@@ -69,7 +69,8 @@ app.filter("filterTasks", function () {
 
 app.controller('AdminStudyPointCtrl', function ($scope, $http, $modal, $location, restErrorHandler) {
 
-  $scope.waiting = false;
+  $scope.loading = false;
+  $scope.saving = false;
   $scope.predicate = 'fullName';
   $scope.filteredTasks = "";
   $scope.safeStatus = null; //Bind information represententing safe status (from server)
@@ -122,7 +123,7 @@ app.controller('AdminStudyPointCtrl', function ($scope, $http, $modal, $location
   }
 
   $scope.showPeriod = function (id) {
-    $scope.safeStatus = null; 
+    $scope.safeStatus = null;
     dirtyCheckOnRouteNavigation();
 
     //TODO --> IS this nessecary: 
@@ -147,45 +148,51 @@ app.controller('AdminStudyPointCtrl', function ($scope, $http, $modal, $location
   }
 
   function getPeriod(id) {
-    $scope.waiting = true;
+    $scope.loading = true;
     $scope.period = null;
     $http.get("api/admin/period/" + id)
             .success(function (data, status, headers, config) {
               $scope.period = data;
-      $scope.waiting = false;
-              
+              $scope.loading = false;
+
               $scope.rows = $scope.period.students.length;
 
               $scope.studyPointForm.$dirty = false;
             })
             .error(function (data, status, headers, config) {
-              $scope.waiting = false;
+              $scope.loading = false;
               restErrorHandler.handleErrors(data, status, $scope);
-      
+
             });
   }
 
   $scope.savePeriod = function () {
     var scores = [];
+    
+    
     $scope.period.students.forEach(function (student) {
       student.scores.forEach(function (score) {
         scores.push({id: score.id, score: score.score});
       });
     });
+    $scope.saving = true;
+    $scope.period = null;
     $http.put("api/admin/scores", scores)
             .success(function (data, status, headers, config) {
               //TODO--> Should we return status ??? 
               $scope.period = null;
-              $scope.safeStatus = "New study points successfully changed"; 
-                            
+              $scope.saving = false;
+              $scope.safeStatus = "New study points successfully added";
+
               //TODO --> CHECK this $scope.rows = $scope.selectedClass.students.length;
               //$scope.rows = $scope.period.students.length;
               $scope.studyPointForm.$dirty = false;
               $scope.studyPointForm.$setPristine();
             })
             .error(function (data, status, headers, config) {
+              $scope.waiting = false;
               restErrorHandler.handleErrors(data, status, $scope);
-             })
+            })
   }
 //Used to se the Tab-index (when a double {{..}} expression is used is seems not no threat a number as a number but as a string
   $scope.calculateTabIndex = function (str) {

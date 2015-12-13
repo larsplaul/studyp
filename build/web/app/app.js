@@ -10,11 +10,13 @@ angular.module('myAppRename', [
   'myAppRename.factories',
   'myAppRename.filters',
   'myAppRename.viewPublic1',
+  'myAppRename.viewNews',
   'myAppRename.user.home',
   'myAppRename.admin.home',
   'myAppRename.admin.studypoint',
   'myAppRename.admin.studyPointsForStudent',
   'myAppRename.admin.editClass',
+  'myAppRename.admin.classInfo',
   'myAppRename.viewUsersDetails',
   //'myAppRename.admin.gridDemo',
   'angularjs-dropdown-multiselect'

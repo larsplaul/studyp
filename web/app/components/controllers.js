@@ -1,6 +1,6 @@
 var app = angular.module('myAppRename.controllers', []);
 
-  app.controller('AppCtrl', function ($scope, $http, $window,$location) {
+  app.controller('AppCtrl', function ($scope, $http, $window,$location,$rootScope) {
 
     function url_base64_decode(str) {
       var output = str.replace('-', '+').replace('_', '/');
@@ -28,6 +28,9 @@ var app = angular.module('myAppRename.controllers', []);
     $scope.isActive = function (viewLocation) {
       return viewLocation === $location.path();
     };
+    $scope.user = {};
+    
+        $scope.user.useFronter = ($window.localStorage.useFronter == "true") ;
 
     $scope.title = "Study Points";
     $scope.username = "";
@@ -37,11 +40,19 @@ var app = angular.module('myAppRename.controllers', []);
     $scope.isUser = false;
     $scope.message = '';
     $scope.error = null;
+    $scope.showLogonSpinner = false;
+    
+    $scope.useFronterClicked = function(){
+      $window.localStorage.useFronter = $scope.user.useFronter;
+    };
 
     $scope.submit = function () {
+      $scope.showLogonSpinner = true;
       $http
         .post('api/login', $scope.user)
+//        .post('https://studypoint-plaul.rhcloud.com/api/remotelogin', $scope.user)
         .success(function (data, status, headers, config) {
+          $scope.showLogonSpinner = false;
           $window.sessionStorage.token = data.token;
           $scope.isAuthenticated = true;
           var encodedProfile = data.token.split('.')[1];
@@ -56,8 +67,10 @@ var app = angular.module('myAppRename.controllers', []);
           // Erase the token if the user fails to log in
           delete $window.sessionStorage.token;
           $scope.isAuthenticated = false;
+          $scope.showLogonSpinner = false;
+          //$scope.error = $rootScope.error;
           $scope.error = data.error;
-          $scope.error.description= null; //Not need for more info than what is provided in message
+          $scope.error.description= null; //No need for more info than what is provided in message
           $scope.logout();  //Clears an eventual error message from timeout on the inner view
         });
     };
@@ -68,7 +81,7 @@ var app = angular.module('myAppRename.controllers', []);
       $scope.isUser = false;
       delete $window.sessionStorage.token;
       $location.path("#/view1");
-    }
+    };
 
     //This sets the login data from session store if user pressed F5 (You are still logged in)
     var init = function () {
@@ -88,54 +101,6 @@ var app = angular.module('myAppRename.controllers', []);
     init();
   });
 
-
-  //app.controller('StudentStudyPointCtrl', ['$scope', '$http','$routeParams', function ($scope, $http, $routeParams) {
-  //
-  //  $scope.name = $routeParams.name; //Only set from Admin View
-  //
-  //  $scope.showPeriod = function(id){
-  //    $scope.period = getPeriod($scope.allPeriods, id);
-  //    $scope.period = getPeriod($scope.allPeriods, id);
-  //  }
-  //
-  //
-  //  function getPeriod(array, periodId) {
-  //    for(var i = 0 ; i < array.length; i++) {
-  //      if (array[i].id === periodId)
-  //        return array[i];
-  //    }
-  //    return null;
-  //  }
-  //
-  //  $scope.getClass = function (id) {
-  //    var urlForStudentsClass = typeof($routeParams.studentId) === "undefined" ? "userApi/class/"+id : "adminApi/class/"+id+"/"+$routeParams.studentId ;
-  //    $http.get(urlForStudentsClass)
-  //      .success(function (data, status, headers, config) {
-  //        $scope.allPeriods = data;
-  //        $scope.period = null;
-  //      })
-  //      .error(function (data, status, headers, config) {
-  //        $scope.error = data.toString();
-  //      })
-  //  }
-  //  //When this controller is used by a Teacher we pass studentId with the request since a teacher can get all students
-  //  //For a student the studentsId is taken from the token on the server
-  //  var urlForStudentsClasses = typeof($routeParams.studentId) === "undefined" ? "userApi/myClasses" : "adminApi/class/"+$routeParams.studentId ;
-  //  $http.get(urlForStudentsClasses)
-  //    .success(function(data,status,headers,config){
-  //      $scope.classes = data;
-  //      $scope.allPeriods = null;
-  //      $scope.period = null;;
-  //      $scope.error = null;
-  //    })
-  //    .error(function (data, status, headers, config) {
-  //      if (status == 401) {
-  //        $scope.error = "You are not authenticated to request these data";
-  //        return;
-  //      }
-  //      $scope.error = data;
-  //    });
-  //}]);
 
 app.controller('warningDeleteNameCtrl', function ($scope, $modalInstance) {
     $scope.cancel = function () {

@@ -10,6 +10,7 @@ import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import deploy.DeploymentConfiguration;
 import facade.StudyPointUserFacade;
 import java.util.Date;
 import javax.persistence.EntityManagerFactory;
@@ -34,10 +35,11 @@ public class Login {
     
     String username =  json.get("username").getAsString(); 
     String password =  json.get("password").getAsString();
+    boolean useFronter =  json.get("useFronter").getAsBoolean();
     JsonObject responseJson = new JsonObject();
     String role;  //Refactor to use an enum
     
-    if ((role=authenticate(username, password))!=null) { 
+    if ((role=authenticate(username, password,useFronter))!=null) { 
       String token = createToken(username, "lam@cphbusieness.dk",role);    
       responseJson.addProperty("username", username);
       responseJson.addProperty("token", token);  
@@ -46,13 +48,13 @@ public class Login {
     throw new NotAuthorizedException("Ilegal username or password",Response.Status.UNAUTHORIZED);
   }
   
-  private String  authenticate(String userName, String password){
-    EntityManagerFactory emf = Persistence.createEntityManagerFactory("StudyPointSystemPU");
+  static String  authenticate(String userName, String password, boolean useFronter){
+    EntityManagerFactory emf = Persistence.createEntityManagerFactory(DeploymentConfiguration.PU_NAME);
     StudyPointUserFacade facade = new StudyPointUserFacade(emf);
-    return facade.authenticateUser(userName, password);
+    return facade.authenticateUser(userName, password,useFronter);
   }
 
-  private String createToken(String subject, String issuer, String role) throws JOSEException {
+  static String createToken(String subject, String issuer, String role) throws JOSEException {
 
     JWSSigner signer = new MACSigner(Secrets.ADMIN.getBytes());
     
@@ -62,7 +64,7 @@ public class Login {
     claimsSet.setCustomClaim("role", role);
     Date date = new Date();
     claimsSet.setIssueTime(date);
-    claimsSet.setExpirationTime(new Date(date.getTime() + 1000*60*60*24));
+    claimsSet.setExpirationTime(new Date(date.getTime() + 1000*60*60));
     claimsSet.setIssuer(issuer);
 
     SignedJWT signedJWT = new SignedJWT(new JWSHeader(JWSAlgorithm.HS256), claimsSet);

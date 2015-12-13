@@ -1,11 +1,10 @@
 package security;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.SignedJWT;
+import deploy.DeploymentConfiguration;
 import entity.StudyPointUser;
 import facade.StudyPointUserFacade;
 import java.io.IOException;
@@ -19,7 +18,6 @@ import javax.annotation.Priority;
 import javax.annotation.security.DenyAll;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
-import javax.naming.AuthenticationException;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.ws.rs.NotAuthorizedException;
@@ -95,7 +93,7 @@ public class JWTAuthenticationFilter implements ContainerRequestFilter {
   }
 
 
-  EntityManagerFactory emf = Persistence.createEntityManagerFactory("StudyPointSystemPU");
+  EntityManagerFactory emf = Persistence.createEntityManagerFactory(DeploymentConfiguration.PU_NAME);
 
   private User getUserByName(String name) {
     StudyPointUserFacade facade = new StudyPointUserFacade(emf);
@@ -113,7 +111,7 @@ public class JWTAuthenticationFilter implements ContainerRequestFilter {
         return true;
       }
     }
-
+   
     for (Class<? extends Annotation> securityClass : securityAnnotations) {
       if (resourceInfo.getResourceClass().isAnnotationPresent(securityClass)) {
         return true;

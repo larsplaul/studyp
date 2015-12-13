@@ -74,7 +74,7 @@ app.controller('StudentStudyPointCtrlAdmin', ['$scope', '$http', '$routeParams',
                .success(function (data) {
                 $scope.studyPointFormForUser.$dirty = false;
                 $scope.studyPointFormForUser.$setPristine();
-                $scope.safeStatus = "New study points successfully changed"; 
+                $scope.safeStatus = "New study points successfully added"; 
                 $scope.getClass($scope.selectedClassId, data);
                 //setTimeout(function(){
                 //  $scope.period = data
