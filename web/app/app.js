@@ -3,6 +3,7 @@
 // Declare app level module which depends on views, and components
 angular.module('myAppRename', [
   'ngRoute',
+  'ngSanitize',
   'ui.bootstrap',
   'angularUtils.directives.dirPagination',
   'myAppRename.controllers',

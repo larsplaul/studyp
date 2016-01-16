@@ -31,6 +31,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.NoResultException;
 import javax.persistence.Persistence;
 import javax.persistence.Query;
+import javax.ws.rs.NotAuthorizedException;
 
 public class JsonAssembler {
 
@@ -447,6 +448,13 @@ public class JsonAssembler {
       user = getUserFromUserName(em, userPrincipal);
     } else {
       user = em.find(StudyPointUser.class, id);
+    }
+    boolean isAdmin = user.getRoles().get(0).getRoleName().equals("Admin");
+    System.out.println("Is Admin: "+isAdmin);
+    if(userPrincipal != null && !isAdmin){
+      if(!user.getFirstName().equals(fName) || !user.getLastName().equals(lName)){
+        throw new SecurityException("You are not authorized to change name values");
+      }
     }
     user.setEmail(email);
     user.setFirstName(fName);

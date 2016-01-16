@@ -3,14 +3,21 @@
   <head>
     <meta charset="utf-8"/>
     <title>StudyPoint-Handler</title>
-    <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap-theme.min.css">
+<!--    <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap-theme.min.css">-->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+
+<!-- Optional theme -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css">
+    
+    
     <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="stylesheets/style.css"/>
 
     <!--<link rel="stylesheet" href="vendor/angular-ui-grid/ui-grid.css" type="text/css">-->
     <script src="bower_components/angular/angular.js"></script>
     <script src="bower_components/angular-route/angular-route.js"></script>
+    <script src="bower_components/angular-sanitize/angular-sanitize.min.js"></script>
     <script src="app/app.js"></script>
     <script src="//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.14.3.js"></script>
 
@@ -18,7 +25,7 @@
   <body>
 
     <div ng-controller="AppCtrl" >
-      <nav class="navbar navbar-fixed-top  navbar-default" role="navigation" >
+      <nav class="navbar navbar-static-top  navbar-default" role="navigation" >
         <div class="container">
           <div class="navbar-header">
             <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"  >
@@ -39,7 +46,6 @@
               <li ng-class="{ active: isActive('/view_admin_classInfo')}"><a href="#/view_admin_classInfo" ng-cloak ng-show="isAdmin" >Info for Class</a></li>
               <li ng-class="{ active: isActive('/view_admin_editClass')}"><a href="#/view_admin_editClass" ng-cloak ng-show="isAdmin" >Edit Class</a></li>
             </ul>
-
             <form class="navbar-form navbar-right" role="form" ng-cloak ng-show="!isAuthenticated" ng-submit="submit()">
               <img src="images/spinnerSmalle.gif" ng-show="showLogonSpinner">
               <div class="form-group">
@@ -81,8 +87,8 @@
         </div>
       </nav>
       <div class="container">
-        <div class="alert alert-warning" role="alert" ng-show="error"  ng-cloak style="margin: 1.5em;" >{{error.message}}
-          <div>{{error.description}}</div>
+        <div class="alert alert-warning" role="alert" ng-show="error"  ng-cloak style="margin: 1.5em;" >
+          <div> {{error.message}} <span>{{error.description}}</span></div>
         </div>
         <div ng-view="ng-view"></div>
 

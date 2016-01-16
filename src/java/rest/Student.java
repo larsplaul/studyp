@@ -26,10 +26,21 @@ public class Student {
   @Path("myClasses")
   @GET
   @Produces("application/json")
-  public String getClassesForCurrentUser() {
+  public Response getClassesForCurrentUser() {
     String user = securityContext.getUserPrincipal().getName();
-    return jsonAssembler.getClassesForCurrentUser(user);
+     return Response
+            .status(200)
+            .header("Access-Control-Allow-Origin", "*")
+            .entity(jsonAssembler.getClassesForCurrentUser(user))
+            .build();
   }
+//  @Path("myClasses")
+//  @GET
+//  @Produces("application/json")
+//  public String getClassesForCurrentUser() {
+//    String user = securityContext.getUserPrincipal().getName();
+//    return jsonAssembler.getClassesForCurrentUser(user);
+//  }
   
   @Path("myStudyPoints/{classId}")
   @GET

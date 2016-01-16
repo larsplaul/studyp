@@ -17,6 +17,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.NotAuthorizedException;
+import javax.ws.rs.OPTIONS;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -43,11 +44,27 @@ public class Login {
       String token = createToken(username, "lam@cphbusieness.dk",role);    
       responseJson.addProperty("username", username);
       responseJson.addProperty("token", token);  
-      return Response.ok(new Gson().toJson(responseJson)).build();
+      return Response.ok(new Gson().toJson(responseJson)).header("Access-Control-Allow-Origin", "*").build();
     }  
     throw new NotAuthorizedException("Ilegal username or password",Response.Status.UNAUTHORIZED);
   }
   
+  
+  //Todo Deep deeper into this
+  @OPTIONS
+  @Produces("application/json")
+  @Consumes("application/json")
+  public Response loginOpt(String scoresAsJson){
+     return Response
+            .status(200)
+            .header("Access-Control-Allow-Origin", "*")
+            .header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Origin, Authorization, Accept, Client-Security-Token, Accept-Encoding")
+            .header("Access-Control-Allow-Credentials", "true")
+            .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD")
+            .header("Access-Control-Max-Age", "1209600")
+            .build();
+  }
+   
   static String  authenticate(String userName, String password, boolean useFronter){
     EntityManagerFactory emf = Persistence.createEntityManagerFactory(DeploymentConfiguration.PU_NAME);
     StudyPointUserFacade facade = new StudyPointUserFacade(emf);
@@ -64,7 +81,7 @@ public class Login {
     claimsSet.setCustomClaim("role", role);
     Date date = new Date();
     claimsSet.setIssueTime(date);
-    claimsSet.setExpirationTime(new Date(date.getTime() + 1000*60*60));
+    claimsSet.setExpirationTime(new Date(date.getTime() + 1000*30)); //1000*60*60*7
     claimsSet.setIssuer(issuer);
 
     SignedJWT signedJWT = new SignedJWT(new JWSHeader(JWSAlgorithm.HS256), claimsSet);

@@ -21,7 +21,9 @@ var app = angular.module('myAppRename.controllers', []);
 
     //Other controller emits the logOutEvent to force a logout
     $scope.$on('logOutEvent', function(event, args) {
-      $scope.error= "Your session timed out. Please login again";
+      $scope.error = {
+          message: "Your Token timed out. Please login again"
+      };
       $scope.logout();
     });
 
@@ -30,7 +32,7 @@ var app = angular.module('myAppRename.controllers', []);
     };
     $scope.user = {};
     
-        $scope.user.useFronter = ($window.localStorage.useFronter == "true") ;
+    $scope.user.useFronter = ($window.localStorage.useFronter === "true") ;
 
     $scope.title = "Study Points";
     $scope.username = "";
@@ -39,7 +41,7 @@ var app = angular.module('myAppRename.controllers', []);
     $scope.isAdmin = false;
     $scope.isUser = false;
     $scope.message = '';
-    $scope.error = null;
+   // $scope.error = null;
     $scope.showLogonSpinner = false;
     
     $scope.useFronterClicked = function(){
@@ -50,7 +52,6 @@ var app = angular.module('myAppRename.controllers', []);
       $scope.showLogonSpinner = true;
       $http
         .post('api/login', $scope.user)
-//        .post('https://studypoint-plaul.rhcloud.com/api/remotelogin', $scope.user)
         .success(function (data, status, headers, config) {
           $scope.showLogonSpinner = false;
           $window.sessionStorage.token = data.token;

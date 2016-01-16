@@ -1,8 +1,24 @@
 <!--<div class="alert alert-danger" role="alert" ng-show="error" style="margin: 1em;">{{error}}</div>-->
 
-<div class="jumbotron alert-info" style="margin-top: 5em;">
-  
-  <img src="images/logo.png" style="margin-left:auto;margin-right: auto;width:80%;display: block">
+<div class="jumbotron alert-info" style="margin-top: 2em;padding:1em;">
+  <div class="row" style="margin-left: 0.5em; margin-right: 0.5em;">
+    <div class="col-md-6">
+      <img src="images/logo.png" style="margin-left:auto;margin-right: auto;width:90%;display: block">
+    </div>
+    <div class="col-md-1">
+      <p>&nbsp;</p>
+    </div>
+    <div class="col-md-5" style=" border-radius: 8px;height: 100%;
+         background-color: rgba(255, 255, 255, 0.3);
+         " >
+
+<!--          <h3 style="text-align: center">Quote of today</h3>-->
+      <div style="margin-top: 0.8em;min-height: 8em;">
+        <p ng-bind-html="joke"></p>
+        <p ng-bind="ref" style="font-size: smaller;"></p>
+      </div>
+    </div>
+  </div>
 </div>
 <div class="row">
   <div class="col-lg-4">
@@ -28,14 +44,14 @@
     </ul>
     <p>Generally Study Points is rewarded for a determined effort, in most cases not for the actual result</p> 
     <img src="images/studentsSmall.JPG" style="width: 100%;">
-    
+
   </div>
   <div class="col-lg-4">
     <h2>What Study Points Are Not</h2>
     <p>Study Points are <b>NOT</b> grades.</p>
     <p>As a student you can attend and participate in the class, work on individual exercises, group projects and help others, even if you don’t belong to "the top" of the class.</p>
     <p>We believe however, that doing all these things, eventually will lead to better grades, and more important better students.</p>
-    
+
 
   </div>
 </div>

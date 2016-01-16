@@ -23,7 +23,8 @@
             <label for="fname" class="control-label col-xs-3"><span class="label label-info">First Name</span></label>
 
             <div class="col-xs-9">
-              <input ng-model="currentUser.firstName" class="form-control input-sm" ng-disabled="!canEdit" id="fname" placeholder="First Name">
+              <input ng-show ="currentUser.role==='Admin'" ng-model="currentUser.firstName" class="form-control input-sm" ng-disabled="!canEdit" id="fname" placeholder="First Name">
+              <p ng-show ="currentUser.role !=='Admin'" ng-model="currentUser.user" class="input-sm" > {{currentUser.firstName}}</p>
             </div>
           </div>
 
@@ -31,7 +32,8 @@
             <label for="lname" class="control-label col-xs-3"><span class="label label-info">Last Name</span></label>
 
             <div class="col-xs-9">
-              <input ng-model="currentUser.lastName" ng-disabled="!canEdit" class="form-control input-sm" id="lname" placeholder="Last Name">
+              <input ng-show ="currentUser.role==='Admin'" ng-model="currentUser.lastName" ng-disabled="!canEdit "  class="form-control input-sm" id="lname" placeholder="Last Name">
+               <p ng-show ="currentUser.role !=='Admin'" ng-model="currentUser.user" class="input-sm" > {{currentUser.lastName}}</p>
             </div>
           </div>
 
